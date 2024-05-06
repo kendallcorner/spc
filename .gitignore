@@ -1,0 +1,4 @@
+shapefiles
+*.zip
+.env
+.mypy_cache

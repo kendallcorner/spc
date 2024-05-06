@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "spc-loc"
+version = "0.1.0"
+description = ""
+authors = ["Kendall Werts <kmwerts@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.31.0"
+geopandas = "^0.14.4"
+twilio = "^9.0.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
