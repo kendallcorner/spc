@@ -87,6 +87,7 @@ def send_text_message(label):
         print(message.sid)
     else:
         print("No elevated risk to send.")
+    return
 
 
 if __name__ == "__main__":
