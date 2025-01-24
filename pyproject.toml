@@ -4,12 +4,15 @@ version = "0.1.0"
 description = ""
 authors = ["Kendall Werts <kmwerts@gmail.com>"]
 readme = "README.md"
+# package in in the src folder
+packages = [{ include = "spc_loc", from = "src" }]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-requests = "^2.31.0"
-geopandas = "^0.14.4"
-twilio = "^9.0.5"
+python = "^3.12"
+requests = "^2.32.3"
+geopandas = "^1.0.1"
+google-auth = { version = "^2.23.0", extras = ["requests"] }
+firebase-admin = "^6.6.0"
 
 
 [build-system]

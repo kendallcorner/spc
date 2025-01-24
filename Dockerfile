@@ -14,7 +14,7 @@ ENV PATH="${PATH}:${POETRY_VENV}/bin"
 WORKDIR /app
 COPY poetry.lock pyproject.toml ./
 RUN poetry config virtualenvs.create false && poetry install
-COPY spc.py ./
+COPY src ./
 
 FROM gcr.io/distroless/python3-debian11 AS runtime
 ENV POETRY_VENV=/opt/poetry-venv
@@ -25,4 +25,4 @@ COPY --from=build /app /app
 ENV PYTHONPATH=/app
 ENV PATH="${POETRY_VENV}/bin:${PATH}"
 
-ENTRYPOINT ["python", "spc.py"]
+ENTRYPOINT ["python", "src/scp_loc"]

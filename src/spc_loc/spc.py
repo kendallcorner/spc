@@ -1,10 +1,18 @@
 from collections import OrderedDict
-from datetime import date
 import os
 import zipfile
 import requests
 import geopandas as gpd
-from twilio.rest import Client
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+# default_app = firebase_admin.initialize_app()
+SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
+creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+cred = credentials.Certificate(creds)
+
+firebase_admin.initialize_app(cred)
 
 
 def get_spc_day_1(day: int = 1, extract_dir: str = "/tmp/shapefiles"):
@@ -60,38 +68,28 @@ def check_loc_in_outlook(gdf: gpd.GeoDataFrame):
     return relevant_label
 
 
-def send_text_message(label):
+def send_notification(
+    description: str,
+    token: str = "ew6m3kNBQvK_C-g3HUOS6k:APA91bHnhFW-r9Ioz_7FgxIiHhn2EC5HZvBYD3OcbyfBStrYbD6SXDVSjtYye1SX7um1rTM2W5pJj8cyvzY5Nn6fWmb-B8uk2t2DauDoy8H6atLQfAUzlxE",
+):
+    """Send a push notification to a specific device using FCM.
 
-    labels = OrderedDict(
-        {
-            "TSTM": "Thunderstorm",
-            "MRGL": "Marginal Risk",
-            "SLGT": "Slight Risk",
-            "ENH": "Enhanced Risk",
-            "MDT": "Moderate Risk",
-            "HIGH": "High Risk",
-        }
-    )
-    description = labels.get(label)
-    if description:
-        print(f"Sending text message: {description}")
-        account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-        auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-        client = Client(account_sid, auth_token)
+    Args:
+        token (str): The FCM token of the target device.
+        title (str): Title of the notification.
+        body (str): Body text of the notification.
 
-        message = client.messages.create(
-            from_="+18339876891",
+    Returns:
+        str: Message ID of the sent notification.
+    """
+    # Create a message object
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title="SPC Checker",
             body=f"The Storm Prediction Center risk in Tulsa today is {description}",
-            to="+19186401377",
-        )
-        print(message.sid)
-    else:
-        print("No elevated risk to send.")
-    return
-
-
-if __name__ == "__main__":
-    get_spc_day_1()
-    gdf = load_day_1()
-    label = check_loc_in_outlook(gdf)
-    send_text_message(label)
+        ),
+        token=token,
+    )
+    response = messaging.send(message)
+    print(f"response: {response}")
+    return response
