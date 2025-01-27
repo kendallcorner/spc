@@ -1,17 +1,39 @@
-from collections import OrderedDict
+import json
 import os
 import zipfile
 import requests
 import geopandas as gpd
 import firebase_admin
+import boto3
 from firebase_admin import credentials, messaging
+from botocore.exceptions import ClientError
 
 # default_app = firebase_admin.initialize_app()
 SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
 creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-cred = credentials.Certificate(creds)
 
+def get_secret():
+    secret_name = "firebase_creds"
+    region_name = "us-east-2"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(service_name="secretsmanager", region_name=region_name)
+
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+        secret = json.loads(get_secret_value_response["SecretString"])
+        firebase_creds = json.loads(secret["firebase_creds"])
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    return firebase_creds
+
+
+cred = credentials.Certificate(get_secret())
 firebase_admin.initialize_app(cred)
 
 

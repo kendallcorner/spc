@@ -1,4 +1,4 @@
-FROM debian:11-slim AS build
+FROM python:3.12-slim AS build
 ARG POETRY_VERSION=1.3.2
 ENV POETRY_VENV=/opt/poetry-venv
 
@@ -13,16 +13,17 @@ RUN apt-get update && \
 ENV PATH="${PATH}:${POETRY_VENV}/bin"
 WORKDIR /app
 COPY poetry.lock pyproject.toml ./
+COPY src /app/src
 RUN poetry config virtualenvs.create false && poetry install
-COPY src ./
 
-FROM gcr.io/distroless/python3-debian11 AS runtime
-ENV POETRY_VENV=/opt/poetry-venv
-COPY --from=build ${POETRY_VENV} ${POETRY_VENV}
-WORKDIR /app
-COPY --from=build /app /app
+# FROM python:3.12-alpine3.21 AS runtime
+# COPY --from=build /usr/local/lib/python3.12 /usr/local/lib/python3.12
+# COPY --from=build /usr/local/bin/python3 /usr/local/bin/python3
+# COPY --from=build ${POETRY_VENV} ${POETRY_VENV}
+# WORKDIR /app
+# COPY --from=build /app /app
 
 ENV PYTHONPATH=/app
 ENV PATH="${POETRY_VENV}/bin:${PATH}"
 
-ENTRYPOINT ["python", "src/scp_loc"]
+CMD ["python", "src/spc_loc"]
