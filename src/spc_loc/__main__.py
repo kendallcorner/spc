@@ -1,17 +1,22 @@
 from spc_loc.spc import (
-    get_spc_day_1,
-    load_day_1,
+    build_message,
+    get_spc_day,
+    load_day,
     check_loc_in_outlook,
     send_notification,
 )
 
 
 def lambda_handler(event, context):
-    get_spc_day_1()
-    gdf = load_day_1()
-    label = check_loc_in_outlook(gdf)
-    send_notification(label)
-    return {"statusCode": 200, "body": "Success!"}
+    day = 2
+    get_spc_day(day=day)
+    gdf = load_day(day=day)
+    cities = {"Tulsa": (-95.9928, 36.1540)}
+    for city_name, city_coords in cities.items():
+        label = check_loc_in_outlook(gdf, city_coords)
+        message = build_message(label, city_name)
+        send_notification(message)
+    exit(0)
 
 
 if __name__ == "__main__":
