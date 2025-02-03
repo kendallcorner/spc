@@ -86,14 +86,17 @@ def check_loc_in_outlook(
     # check if is in the multipolygons in teh geometry field of each gdf row
     relevant_label = None
     for idx, row in gdf.iterrows():
-        print(f'row["LABEL"]: {row["LABEL"]}')
-        print(f"idx: {idx}")
+        try:
+            relevant_label = row["LABEL"]
+        except KeyError:
+            continue
+        print(f"relevant_label: {relevant_label}")
         print(f"city_coords: {city_coords}")
         if row["geometry"].contains(
             gpd.points_from_xy([city_coords[0]], [city_coords[1]])[0]
         ):
-            print(f"Found Tulsa in outlook: {row['LABEL']}")
-            relevant_label = row["LABEL"]
+            print(f"Found Tulsa in outlook: {relevant_label}")
+
     return relevant_label
 
 
