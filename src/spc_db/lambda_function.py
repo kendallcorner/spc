@@ -16,7 +16,6 @@ def float_to_decimal(float_value):
 
 def lambda_handler(event, context):
     print(f"event: {event}")
-    # try:
     # Parse the request body
     if event["isBase64Encoded"]:
         decoded_body = base64.b64decode(event["body"]).decode("utf-8")
@@ -32,39 +31,50 @@ def lambda_handler(event, context):
             "body": json.dumps({"error": "phone_id is required"}),
         }
 
-    # Prepare item for DynamoDB
-    item = {
-        "phone_id": body["phone_id"],
-        "created_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat(),
+    # Start building update expression
+    update_expression = ["updated_at = :updated_at"]
+    expression_values = {
+        ":updated_at": datetime.now().isoformat(),
     }
+
+    # Check if this is a new item
+    try:
+        response = table.get_item(Key={"phone_id": body["phone_id"]})
+        is_new_item = "Item" not in response
+    except Exception:
+        is_new_item = True
+
+    if is_new_item:
+        update_expression.append("created_at = :created_at")
+        expression_values[":created_at"] = datetime.now().isoformat()
 
     # Add optional fields if they exist
     if "fcm_token" in body:
-        item["fcm_token"] = body["fcm_token"]
-    if "lat" in body:
-        item["lat"] = float_to_decimal(body["lat"])
-    if "lon" in body:
-        item["lon"] = float_to_decimal(body["lon"])
+        update_expression.append("fcm_token = :fcm_token")
+        expression_values[":fcm_token"] = body["fcm_token"]
 
-    print(f"item: {item}")
-    # Insert into DynamoDB
-    table.put_item(Item=item)
+    if "lat" in body and body["lat"] is not None:
+        update_expression.append("lat = :lat")
+        expression_values[":lat"] = float_to_decimal(body["lat"])
+
+    if "lon" in body and body["lon"] is not None:
+        update_expression.append("lon = :lon")
+        expression_values[":lon"] = float_to_decimal(body["lon"])
+
+    # Update DynamoDB
+    update_expr = "SET " + ", ".join(update_expression)
+    table.update_item(
+        Key={"phone_id": body["phone_id"]},
+        UpdateExpression=update_expr,
+        ExpressionAttributeValues=expression_values,
+    )
 
     return {
         "statusCode": 201,
         "body": json.dumps(
             {
-                "phone_id": item["phone_id"],
-                "created_at": item["created_at"],
+                "phone_id": body["phone_id"],
+                "updated_at": expression_values[":updated_at"],
             }
         ),
     }
-
-    # except json.JSONDecodeError:
-    #     return {
-    #         "statusCode": 400,
-    #         "body": json.dumps({"error": "Invalid JSON in request body"}),
-    #     }
-    # except Exception as e:
-    #     return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
