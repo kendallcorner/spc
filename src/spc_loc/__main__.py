@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+from spc_loc.db import get_phones_list
 from spc_loc.spc import (
     build_message,
     get_spc_day,
@@ -11,16 +12,29 @@ from spc_loc.spc import (
 
 
 def run_main(event, context):
-    day = 2
+    day = 1
     get_spc_day(day=day)
     gdf = load_day(day=day)
-    cities = {"Tulsa": (-95.9928, 36.1540)}
+    phones_list = [
+        {
+            "phone_id": "",
+            "fcm_token": "ew6m3kNBQvK_C-g3HUOS6k:APA91bHnhFW-r9Ioz_7FgxIiHhn2EC5HZvBYD3OcbyfBStrYbD6SXDVSjtYye1SX7um1rTM2W5pJj8cyvzY5Nn6fWmb-B8uk2t2DauDoy8H6atLQfAUzlxE",
+            "lat": 36.1540,
+            "lon": -95.9928,
+        }
+    ]
+    phones_list = get_phones_list()
     results = []
-    for city_name, city_coords in cities.items():
-        label = check_loc_in_outlook(gdf, city_coords)
-        message = build_message(label, city_name)
+    for app_data in phones_list:
+        lon = app_data["lon"]
+        lat = app_data["lat"]
+        phone_id = app_data["phone_id"]
+        fcm_token = app_data["fcm_token"]
+
+        label = check_loc_in_outlook(gdf, lon, lat)
+        message = build_message(label, token=fcm_token)
         response = send_notification(message)
-        results.append({"city": city_name, "response": response})
+        results.append({"phone_id": phone_id, "response": response})
 
     return {
         "statusCode": 200,

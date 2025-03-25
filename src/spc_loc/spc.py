@@ -77,9 +77,7 @@ def load_day(day, extract_dir: str = "/tmp/shapefiles"):
     return gdf
 
 
-def check_loc_in_outlook(
-    gdf: gpd.GeoDataFrame, city_coords: Tuple[float, float] = (-95.9928, 36.1540)
-):
+def check_loc_in_outlook(gdf: gpd.GeoDataFrame, lon: float, lat: float):
     # show column headers of gdf
     print(gdf)
     # coordinates of Tulsa
@@ -90,24 +88,22 @@ def check_loc_in_outlook(
             relevant_label = row["LABEL"]
         except KeyError:
             continue
-        print(f"relevant_label: {relevant_label}")
-        print(f"city_coords: {city_coords}")
-        if row["geometry"].contains(
-            gpd.points_from_xy([city_coords[0]], [city_coords[1]])[0]
-        ):
+        print(f"relevant_label: {idx}, {relevant_label}")
+        print(f"city_coords: {(lon, lat)}")
+        if row["geometry"].contains(gpd.points_from_xy([lon], [lat])[0]):
             print(f"Found Tulsa in outlook: {relevant_label}")
+            return relevant_label
 
-    return relevant_label
+    return None
 
 
 def build_message(
     risk_label: str,
-    city_name: str,
     token: str = "ew6m3kNBQvK_C-g3HUOS6k:APA91bHnhFW-r9Ioz_7FgxIiHhn2EC5HZvBYD3OcbyfBStrYbD6SXDVSjtYye1SX7um1rTM2W5pJj8cyvzY5Nn6fWmb-B8uk2t2DauDoy8H6atLQfAUzlxE",
 ):
-    body = "No Storm Prediction Center risk in Tulsa today"
+    body = "No Storm Prediction Center risk in your area today"
     if risk_label:
-        body = f"{risk_label} is the Storm Prediction Center risk in {city_name} today"
+        body = f"{risk_label} is the Storm Prediction Center risk today"
 
     message = messaging.Message(
         notification=messaging.Notification(
