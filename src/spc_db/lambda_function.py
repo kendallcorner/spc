@@ -1,6 +1,7 @@
 import base64
 from decimal import Decimal
 import json
+import os
 import boto3
 from datetime import datetime
 
@@ -16,6 +17,13 @@ def float_to_decimal(float_value):
 
 def lambda_handler(event, context):
     print(f"event: {event}")
+    headers = event["headers"]
+    api_key = headers["authorization"]
+    if api_key != os.getenv("SPC_DB_API_KEY"):
+        return {
+            "statusCode": 401,
+            "body": json.dumps({"error": "Unauthorized"}),
+        }
     # Parse the request body
     if event["isBase64Encoded"]:
         decoded_body = base64.b64decode(event["body"]).decode("utf-8")
